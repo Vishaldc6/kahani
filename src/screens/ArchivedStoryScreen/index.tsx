@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
 import {
+  Alert,
   FlatList,
+  Modal,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 import useCustomWindowDimensions from "../../hooks/useCustomWindowDimensions";
 import useCustomNavigation from "../../hooks/useCustomNavigation";
@@ -16,7 +19,7 @@ import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "../../utils/firebaseConfig";
 import { StoryType } from "../../redux/slices/StorySlice";
 import { useAppSelector } from "../../redux/store/configureStore";
-import { Ionicons } from "@expo/vector-icons";
+import { updateDocument } from "../../utils/databaseHelper";
 
 const ArchivedStoryScreen = () => {
   const styles = useStyles();
@@ -27,6 +30,8 @@ const ArchivedStoryScreen = () => {
 
   const [isLoading, setIsLoading] = useState(true);
   const [archivedList, setArchivedList] = useState<StoryType[]>();
+  const [isOptionVisible, setIsOptionVisible] = useState(false);
+  const [selectedStoryId, setSelectedStoryId] = useState();
 
   useEffect(() => {
     const q = query(
@@ -58,17 +63,26 @@ const ArchivedStoryScreen = () => {
     const iconType =
       item.type == "TEXT" ? "document-text-outline" : "image-outline";
     return (
-      <TouchableOpacity
-        style={styles.storyCard}
-        // onPress={() => handleDraftCardPress(item)}
-      >
+      <View style={styles.storyCard}>
         <View style={styles.storyType}>
           <Ionicons name={iconType} size={60} color={AppColors.PRIMARY_TEXT} />
         </View>
         <Text style={styles.titleTxt} numberOfLines={1}>
           {item.title}
         </Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            setSelectedStoryId(item.id);
+            handleContextMenu();
+          }}
+        >
+          <Ionicons
+            name={"ellipsis-vertical"}
+            size={25}
+            color={AppColors.PRIMARY_TEXT}
+          />
+        </TouchableOpacity>
+      </View>
     );
   };
 
@@ -78,6 +92,27 @@ const ArchivedStoryScreen = () => {
         <Text style={styles.emptyTxt}>{"No one story is archived yet !"}</Text>
       </View>
     );
+  };
+
+  const handleContextMenu = () => {
+    setIsOptionVisible(!isOptionVisible);
+  };
+
+  const handleUnArchivedStory = () => {
+    handleContextMenu();
+    setIsLoading(true);
+    updateDocument("Stories", selectedStoryId, {
+      archived: false,
+    })
+      .then(() => {
+        setIsLoading(false);
+        Alert.alert("Archive story", "Story available to home page !");
+      })
+      .catch((error) => {
+        setIsLoading(false);
+        console.log({ error });
+        Alert.alert("Error", "Story un-archiving failed !!");
+      });
   };
 
   return (
@@ -100,6 +135,26 @@ const ArchivedStoryScreen = () => {
           showsVerticalScrollIndicator={false}
         />
       </View>
+
+      <Modal
+        transparent
+        statusBarTranslucent
+        visible={isOptionVisible}
+        animationType="fade"
+        onRequestClose={handleContextMenu}
+      >
+        <TouchableOpacity
+          style={styles.menuModalContainer}
+          onPress={handleContextMenu}
+          activeOpacity={1}
+        >
+          <View style={styles.menuContent}>
+            <Text style={styles.menuOptionTxt} onPress={handleUnArchivedStory}>
+              {"Remove from archive"}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </>
   );
 };
@@ -135,9 +190,9 @@ const useStyles = () => {
       alignItems: "center",
       height: wp(18),
       width: wp(18),
-      borderRadius: wp(3),
     },
     titleTxt: {
+      flex: 1,
       fontSize: 20,
       color: AppColors.PRIMARY_TEXT,
     },
@@ -150,6 +205,24 @@ const useStyles = () => {
       textAlign: "center",
       color: AppColors.PRIMARY_TEXT,
       fontSize: 18,
+    },
+    menuModalContainer: {
+      backgroundColor: AppColors.TRANSPARENT,
+      flex: 1,
+      justifyContent: "flex-end",
+    },
+    menuContent: {
+      backgroundColor: AppColors.WHITE,
+      padding: wp(5),
+      borderTopLeftRadius: wp(5),
+      borderTopRightRadius: wp(5),
+      gap: hp(1.2),
+    },
+    menuOptionTxt: {
+      fontSize: 18,
+      textAlign: "center",
+      marginVertical: wp(1),
+      color: AppColors.ERROR,
     },
   });
 };

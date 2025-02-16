@@ -66,6 +66,8 @@ const AddStoryScreen = () => {
     handleBlur,
     setValues,
     isValid,
+    validateForm,
+    setTouched,
   } = useFormik({
     initialValues: {
       title: "",
@@ -123,30 +125,39 @@ const AddStoryScreen = () => {
     }
   }, []);
 
-  const handleSaveDraft = () => {
-    if (isValid) {
-      if (params?.id) {
-        dispatch(
-          updateDraftStory({
-            title: values.title,
-            type: "TEXT",
-            content: values.content,
-            id: params.id,
-            visibility: visibility,
-          })
-        );
-      } else {
-        dispatch(
-          addDraftStory({
-            title: values.title,
-            type: "TEXT",
-            content: values.content,
-            visibility: visibility,
-          })
-        );
+  const handleSaveDraft = async () => {
+    setTouched({
+      content: true,
+      title: true,
+    });
+    validateForm({
+      title: values.title,
+      content: values.content,
+    }).then((res) => {
+      if (Object.keys(res).length == 0) {
+        if (params?.id) {
+          dispatch(
+            updateDraftStory({
+              title: values.title,
+              type: "TEXT",
+              content: values.content,
+              id: params.id,
+              visibility: visibility,
+            })
+          );
+        } else {
+          dispatch(
+            addDraftStory({
+              title: values.title,
+              type: "TEXT",
+              content: values.content,
+              visibility: visibility,
+            })
+          );
+        }
+        navigation.goBack();
       }
-      navigation.goBack();
-    }
+    });
   };
 
   const handleDeleteDraft = () => {
