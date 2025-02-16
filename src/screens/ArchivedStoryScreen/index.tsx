@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FlatList,
   StyleSheet,
@@ -6,36 +6,61 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useAppSelector } from "../../redux/store/configureStore";
-import useCustomWindowDimensions from "../../hooks/useCustomWindowDimensions";
-import { Ionicons } from "@expo/vector-icons";
-import useCustomNavigation from "../../hooks/useCustomNavigation";
-import { BaseHeader } from "../../components";
-import { AppColors } from "../../assets/colors/AppColors";
-import { DrawerActions } from "@react-navigation/native";
 
-const DraftStoryScreen = () => {
+import useCustomWindowDimensions from "../../hooks/useCustomWindowDimensions";
+import useCustomNavigation from "../../hooks/useCustomNavigation";
+import { BaseHeader, BaseLoader } from "../../components";
+import { DrawerActions } from "@react-navigation/native";
+import { AppColors } from "../../assets/colors/AppColors";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { db } from "../../utils/firebaseConfig";
+import { StoryType } from "../../redux/slices/StorySlice";
+import { useAppSelector } from "../../redux/store/configureStore";
+import { Ionicons } from "@expo/vector-icons";
+
+const ArchivedStoryScreen = () => {
   const styles = useStyles();
 
-  const navigation = useCustomNavigation("DraftStory");
-  const { draftStoryList } = useAppSelector((state) => state.StoryReducer);
+  const navigation = useCustomNavigation("ArchivedStory");
 
-  const handleDraftCardPress = (item) => {
-    navigation.navigate("AddStory", {
-      content: item.content,
-      title: item.title,
-      id: item.id,
-      visibility: item.visibility,
+  const { user } = useAppSelector((state) => state.UserReducer);
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [archivedList, setArchivedList] = useState<StoryType[]>();
+
+  useEffect(() => {
+    const q = query(
+      collection(db, "Stories"),
+      where("archived", "==", true),
+      where("author_id", "==", user.id)
+      // orderBy("created_at")
+    );
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      let _storyList: StoryType[] = [];
+
+      querySnapshot.forEach((doc) => {
+        console.log({ data: doc.data() });
+        _storyList.push(doc.data() as StoryType);
+      });
+
+      setIsLoading(false);
+      setArchivedList(_storyList);
+      //   dispatch(setStoryList(_storyList));
     });
-  };
 
-  const renderDraftCard = ({ item }) => {
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  const renderStoryCard = ({ item }) => {
     const iconType =
       item.type == "TEXT" ? "document-text-outline" : "image-outline";
     return (
       <TouchableOpacity
-        style={styles.draftStoryCard}
-        onPress={() => handleDraftCardPress(item)}
+        style={styles.storyCard}
+        // onPress={() => handleDraftCardPress(item)}
       >
         <View style={styles.storyType}>
           <Ionicons name={iconType} size={60} color={AppColors.PRIMARY_TEXT} />
@@ -50,9 +75,7 @@ const DraftStoryScreen = () => {
   const renderEmptyComponent = () => {
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyTxt}>
-          {"No one story is added to the draft yet !"}
-        </Text>
+        <Text style={styles.emptyTxt}>{"No one story is archived yet !"}</Text>
       </View>
     );
   };
@@ -60,35 +83,28 @@ const DraftStoryScreen = () => {
   return (
     <>
       <BaseHeader
-        title="Draft Story"
+        title="Archived Story"
         leftIcon="menu"
         leftIconPress={() => {
           navigation.dispatch(DrawerActions.toggleDrawer());
         }}
       />
+      {isLoading && <BaseLoader />}
       <View style={styles.container}>
         <FlatList
-          data={draftStoryList}
-          renderItem={renderDraftCard}
+          data={archivedList}
+          renderItem={renderStoryCard}
           ListEmptyComponent={renderEmptyComponent}
           contentContainerStyle={styles.flatListContentStyle}
           style={styles.listStyle}
           showsVerticalScrollIndicator={false}
         />
-        <TouchableOpacity
-          style={styles.floatingBtn}
-          onPress={() => {
-            navigation.navigate("AddStory");
-          }}
-        >
-          <Ionicons name="add" size={40} color={AppColors.PRIMARY} />
-        </TouchableOpacity>
       </View>
     </>
   );
 };
 
-export default DraftStoryScreen;
+export default ArchivedStoryScreen;
 
 const useStyles = () => {
   const { wp, hp } = useCustomWindowDimensions();
@@ -97,7 +113,13 @@ const useStyles = () => {
       flex: 1,
       paddingHorizontal: wp(5),
     },
-    draftStoryCard: {
+    listStyle: {
+      marginVertical: "2%",
+    },
+    flatListContentStyle: {
+      flexGrow: 1,
+    },
+    storyCard: {
       marginBottom: hp(1.7),
       borderWidth: 2.5,
       borderRadius: wp(5),
@@ -115,11 +137,9 @@ const useStyles = () => {
       width: wp(18),
       borderRadius: wp(3),
     },
-    listStyle: {
-      marginVertical: "2%",
-    },
-    flatListContentStyle: {
-      flexGrow: 1,
+    titleTxt: {
+      fontSize: 20,
+      color: AppColors.PRIMARY_TEXT,
     },
     emptyContainer: {
       height: "90%",
@@ -130,23 +150,6 @@ const useStyles = () => {
       textAlign: "center",
       color: AppColors.PRIMARY_TEXT,
       fontSize: 18,
-    },
-    floatingBtn: {
-      bottom: hp(3),
-      right: wp(7),
-      position: "absolute",
-      justifyContent: "center",
-      alignItems: "center",
-      borderWidth: 2.5,
-      borderRadius: wp(50),
-      height: wp(15),
-      width: wp(15),
-      borderColor: AppColors.PRIMARY,
-      backgroundColor: AppColors.SECONDARY,
-    },
-    titleTxt: {
-      fontSize: 20,
-      color: AppColors.PRIMARY_TEXT,
     },
   });
 };

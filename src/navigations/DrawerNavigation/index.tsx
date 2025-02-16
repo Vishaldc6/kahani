@@ -9,6 +9,7 @@ import {
   AddStoryScreen,
   ProfileScreen,
   DraftStoryScreen,
+  ArchivedStoryScreen,
 } from "../../screens";
 import { DrawerParamList } from "../../types/RootNavigation";
 import { AppColors } from "../../assets/colors/AppColors";
@@ -48,6 +49,13 @@ const DrawerNavigation = () => {
         component={DraftStoryScreen}
         options={{
           drawerLabel: "Draft Story",
+        }}
+      />
+      <Drawer.Screen
+        name="ArchivedStory"
+        component={ArchivedStoryScreen}
+        options={{
+          drawerLabel: "Archived Story",
         }}
       />
 

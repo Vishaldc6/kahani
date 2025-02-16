@@ -1,4 +1,5 @@
 import AddStoryScreen from "./AddStoryScreen";
+import ArchivedStoryScreen from "./ArchivedStoryScreen";
 import DraftStoryScreen from "./DraftStoryScreen";
 import HomeScreen from "./HomeScreen";
 import LoginScreen from "./LoginScreen";
@@ -7,6 +8,7 @@ import ReadStoryScreen from "./ReadStoryScreen";
 import RegisterScreen from "./RegisterScreen";
 
 export {
+  ArchivedStoryScreen,
   HomeScreen,
   DraftStoryScreen,
   LoginScreen,

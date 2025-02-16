@@ -83,6 +83,7 @@ const AddStoryScreen = () => {
         likes: 0,
         type: "TEXT",
         visibility: visibility.toUpperCase() as Visibility,
+        archived: false,
       };
 
       addDocument("Stories", _storyData.id, _storyData)

@@ -18,6 +18,7 @@ export interface StoryType {
   created_at?: string;
   updated_at?: string;
   visibility?: Visibility;
+  archived?: boolean;
 }
 
 type InitialStateType = {

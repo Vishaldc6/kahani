@@ -68,7 +68,9 @@ export const generateUniqueId = async (_collection: string, field: string) => {
   } else {
     querySnapshot.forEach((doc) => {
       console.log(doc.id, " => ", doc.data());
-      _id = Number(doc.id.substring(1)) + 1;
+      // NEED TO CHANGE ID IF USER MORE THAN 99
+      // id format : U02_xoxoxoxoxoxoxoxo (U-user, S-story)
+      _id = Number(doc.id.substring(1, 3)) + 1;
     });
   }
 

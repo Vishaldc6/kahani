@@ -12,11 +12,10 @@ import useCustomWindowDimensions from "../../hooks/useCustomWindowDimensions";
 import useCustomNavigation from "../../hooks/useCustomNavigation";
 import { AppColors } from "../../assets/colors/AppColors";
 import {
+  and,
   collection,
-  doc,
   onSnapshot,
   or,
-  orderBy,
   query,
   where,
 } from "firebase/firestore";
@@ -66,10 +65,15 @@ const HomeScreen = () => {
   useEffect(() => {
     const q = query(
       collection(db, "Stories"),
-      or(
-        where("visibility", "==", "EVERYONE"),
-        (where("visibility", "==", "PRIVATE"),
-        where("author_id", "==", user.id))
+      and(
+        where("archived", "==", false),
+        or(
+          and(where("visibility", "==", "EVERYONE")),
+          and(
+            where("visibility", "==", "PRIVATE"),
+            where("author_id", "==", user.id)
+          )
+        )
       )
       // orderBy("created_at")
     );
@@ -128,6 +132,13 @@ const HomeScreen = () => {
             {item.author_id ?? "Unknown"}
           </Text> */}
         </View>
+        {item?.visibility == "PRIVATE" && (
+          <Ionicons
+            name={"lock-closed-outline"}
+            size={25}
+            color={AppColors.PRIMARY_TEXT}
+          />
+        )}
       </TouchableOpacity>
     );
   };
@@ -212,7 +223,6 @@ const useStyles = () => {
       alignItems: "center",
       height: wp(18),
       width: wp(18),
-      borderRadius: wp(3),
     },
     storyDetailContainer: {
       flex: 1,

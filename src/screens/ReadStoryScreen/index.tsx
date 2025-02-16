@@ -20,9 +20,9 @@ import {
   useAppDispatch,
   useAppSelector,
 } from "../../redux/store/configureStore";
-import { getStoryData } from "../../redux/slices/StorySlice";
+import { getStoryData, Visibility } from "../../redux/slices/StorySlice";
 import { AppColors } from "../../assets/colors/AppColors";
-import { removeDocument } from "../../utils/databaseHelper";
+import { removeDocument, updateDocument } from "../../utils/databaseHelper";
 
 const ReadStoryScreen = () => {
   const navigation = useCustomNavigation("ReadStory");
@@ -58,6 +58,45 @@ const ReadStoryScreen = () => {
     );
   };
 
+  const handleArchivedStory = () => {
+    handleContextMenu();
+    setIsLoading(true);
+    updateDocument("Stories", storyData?.id, {
+      archived: true,
+    })
+      .then(() => {
+        setIsLoading(false);
+        Alert.alert("Archive story", "Story archived successfully !");
+        navigation.goBack();
+      })
+      .catch((error) => {
+        setIsLoading(false);
+        console.log({ error });
+        Alert.alert("Error", "Story archived failed !!");
+      });
+  };
+
+  const handleChnageVisibility = () => {
+    handleContextMenu();
+    setIsLoading(true);
+    updateDocument("Stories", storyData?.id, {
+      visibility:
+        storyData?.visibility == Visibility.PRIVATE
+          ? Visibility.EVERYONE
+          : Visibility.PRIVATE,
+    })
+      .then(() => {
+        setIsLoading(false);
+        // Alert.alert("Story visibility", "");
+        navigation.goBack();
+      })
+      .catch((error) => {
+        setIsLoading(false);
+        console.log({ error });
+        Alert.alert("Error", "Something went wrong !!");
+      });
+  };
+
   const handleConfirmDeleteStory = () => {
     Alert.alert(
       "Delete story",
@@ -86,7 +125,7 @@ const ReadStoryScreen = () => {
       .catch((error) => {
         setIsLoading(false);
         console.log({ error });
-        Alert.alert("Error", "Profile update failed !!");
+        Alert.alert("Error", "Story deletion failed !!");
       });
   };
 
@@ -139,13 +178,31 @@ const ReadStoryScreen = () => {
                 </Text> */}
                 <Text
                   style={styles.menuOptionTxt}
+                  onPress={handleArchivedStory}
+                >
+                  {"Archive"}
+                </Text>
+                <Text
+                  style={styles.menuOptionTxt}
+                  onPress={handleChnageVisibility}
+                >
+                  {"Visible to"}&nbsp;
+                  {storyData?.visibility == Visibility.PRIVATE
+                    ? "everyone"
+                    : "you only"}
+                </Text>
+                <Text
+                  style={[styles.menuOptionTxt, styles.warningOptionTxt]}
                   onPress={handleConfirmDeleteStory}
                 >
                   {"Delete"}
                 </Text>
               </>
             ) : (
-              <Text style={styles.menuOptionTxt} onPress={handleReport}>
+              <Text
+                style={[styles.menuOptionTxt, styles.warningOptionTxt]}
+                onPress={handleReport}
+              >
                 {"Report"}
               </Text>
             )}
@@ -189,11 +246,14 @@ const useStyles = () => {
       padding: wp(5),
       borderTopLeftRadius: wp(5),
       borderTopRightRadius: wp(5),
+      gap: hp(1.2),
     },
     menuOptionTxt: {
       fontSize: 18,
       textAlign: "center",
       marginVertical: wp(1),
+    },
+    warningOptionTxt: {
       color: AppColors.ERROR,
     },
   });
