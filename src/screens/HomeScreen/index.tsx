@@ -7,10 +7,6 @@ import {
   View,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-
-import useCustomWindowDimensions from "../../hooks/useCustomWindowDimensions";
-import useCustomNavigation from "../../hooks/useCustomNavigation";
-import { AppColors } from "../../assets/colors/AppColors";
 import {
   and,
   collection,
@@ -19,6 +15,11 @@ import {
   query,
   where,
 } from "firebase/firestore";
+import { DrawerActions } from "@react-navigation/native";
+
+import useCustomWindowDimensions from "../../hooks/useCustomWindowDimensions";
+import useCustomNavigation from "../../hooks/useCustomNavigation";
+import { AppColors } from "../../assets/colors/AppColors";
 import { db } from "../../utils/firebaseConfig";
 import {
   useAppDispatch,
@@ -26,31 +27,7 @@ import {
 } from "../../redux/store/configureStore";
 import { setStoryList, StoryType } from "../../redux/slices/StorySlice";
 import { BaseHeader, BaseLoader } from "../../components";
-import { DrawerActions } from "@react-navigation/native";
 import { AppQuotes } from "../../assets/quotes/AppQuotes";
-
-const _dummyList = [
-  {
-    id: "12",
-    title: "sdwd",
-    likes: 0,
-    type: "image",
-    owner: "sdwd",
-  },
-  {
-    id: "126",
-    title: "oidjoijdajdoiwjdad",
-    likes: 45,
-    type: "audio",
-  },
-  {
-    id: "127",
-    title: "lksjdlakjsdkj aslkdjalksd klsjd",
-    likes: 5000,
-    type: "pdf",
-    owner: "sjlkjdlkjlsj kdjfjf dlkj",
-  },
-];
 
 const HomeScreen = () => {
   const styles = useStyles();
@@ -94,7 +71,8 @@ const HomeScreen = () => {
     };
   }, []);
 
-  const renderStoryCard = ({ item }) => {
+  const renderStoryCard = ({ item }: { item: StoryType }) => {
+    const isLiked = item.liked_by.find((val) => val === user.id);
     const iconType =
       item.type == "TEXT" ? "document-text-outline" : "image-outline";
     // const iconType =
@@ -122,12 +100,18 @@ const HomeScreen = () => {
           <Text style={styles.titleTxt} numberOfLines={1}>
             {item.title}
           </Text>
-          {/* <View style={styles.likeContainer}>
-            <Ionicons name="heart" size={20} />
-            <Text style={styles.likesTxt} numberOfLines={1}>
-              {item.likes}
-            </Text>
-          </View> */}
+          <View style={styles.likeContainer}>
+            <Ionicons
+              name={isLiked ? "heart" : "heart-outline"}
+              size={20}
+              color={AppColors.PRIMARY}
+            />
+            {!!item.liked_by.length && (
+              <Text style={styles.likesTxt} numberOfLines={1}>
+                {item.liked_by.length}
+              </Text>
+            )}
+          </View>
           {/* <Text style={styles.ownerTxt} numberOfLines={1}>
             {item.author_id ?? "Unknown"}
           </Text> */}
@@ -229,11 +213,12 @@ const useStyles = () => {
       rowGap: wp(1.2),
     },
     titleTxt: {
-      fontSize: 20,
+      fontSize: 22,
       color: AppColors.PRIMARY_TEXT,
     },
     likesTxt: {
       fontSize: 18,
+      color: AppColors.PRIMARY_TEXT,
     },
     ownerTxt: {
       fontSize: 16,
@@ -241,7 +226,7 @@ const useStyles = () => {
     likeContainer: {
       flexDirection: "row",
       alignItems: "center",
-      columnGap: wp(2),
+      columnGap: wp(1.2),
     },
     floatingBtn: {
       bottom: hp(3),

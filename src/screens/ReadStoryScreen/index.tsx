@@ -20,9 +20,14 @@ import {
   useAppDispatch,
   useAppSelector,
 } from "../../redux/store/configureStore";
-import { getStoryData, Visibility } from "../../redux/slices/StorySlice";
+import {
+  getStoryData,
+  updateStoryData,
+  Visibility,
+} from "../../redux/slices/StorySlice";
 import { AppColors } from "../../assets/colors/AppColors";
 import { removeDocument, updateDocument } from "../../utils/databaseHelper";
+import { Ionicons } from "@expo/vector-icons";
 
 const ReadStoryScreen = () => {
   const navigation = useCustomNavigation("ReadStory");
@@ -35,6 +40,7 @@ const ReadStoryScreen = () => {
 
   const [isMenuVisiable, setIsMenuVisiable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
 
   useEffect(() => {
     if (params?._id) {
@@ -46,7 +52,30 @@ const ReadStoryScreen = () => {
     }
   }, []);
 
-  const handleLikeStory = () => {};
+  useEffect(() => {
+    console.log({ storyData });
+    setIsLiked(storyData?.liked_by.findIndex((val) => val === user.id) > -1);
+  }, [storyData]);
+
+  const handleLikeStory = () => {
+    const newLikeList = isLiked
+      ? storyData.liked_by.filter((val) => val !== user.id)
+      : [...storyData.liked_by, user.id];
+
+    dispatch(
+      updateStoryData({
+        liked_by: newLikeList,
+      })
+    );
+
+    updateDocument("Stories", storyData?.id, {
+      liked_by: newLikeList,
+    });
+  };
+
+  const handleShareStory = () => {
+    Alert.alert("Share story", "You can share the stories in upcoming time !");
+  };
 
   const handleContextMenu = () => {
     setIsMenuVisiable(!isMenuVisiable);
@@ -145,15 +174,20 @@ const ReadStoryScreen = () => {
         <ScrollView contentContainerStyle={styles.contentContainer}>
           <Text style={styles.contentTxt}>{storyData?.content}</Text>
         </ScrollView>
-        {/* <View style={styles.btnRowContainer}>
-          <BaseButton
-            title="Like"
-            prefixIcon={"heart"}
-            style={{ flex: 1 }}
-            onPress={handleLikeStory}
-          />
-           <BaseButton title="Share" style={{ flex: 1 }} /> 
-        </View> */}
+      </View>
+      <View style={styles.btnRowContainer}>
+        <Ionicons
+          name={isLiked ? "heart" : "heart-outline"}
+          size={26}
+          color={AppColors.PRIMARY}
+          onPress={handleLikeStory}
+        />
+        <Ionicons
+          name="share-social"
+          size={26}
+          color={AppColors.PRIMARY}
+          onPress={handleShareStory}
+        />
       </View>
 
       <Modal
@@ -235,6 +269,11 @@ const useStyles = () => {
     },
     btnRowContainer: {
       flexDirection: "row",
+      justifyContent: "space-around",
+      borderTopWidth: 2,
+      padding: wp(4),
+      borderColor: AppColors.PRIMARY,
+      backgroundColor: AppColors.SECONDARY,
     },
     menuModalContainer: {
       backgroundColor: AppColors.TRANSPARENT,

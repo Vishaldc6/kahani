@@ -14,7 +14,7 @@ import useCustomWindowDimensions from "./src/hooks/useCustomWindowDimensions";
 export default function App() {
   const styles = useStyle();
 
-  const [isConnected, setIsConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState(true);
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {

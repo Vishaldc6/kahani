@@ -82,7 +82,7 @@ const AddStoryScreen = () => {
         title: values.title,
         content: values.content,
         author_id: user.id,
-        likes: 0,
+        liked_by: [],
         type: "TEXT",
         visibility: visibility.toUpperCase() as Visibility,
         archived: false,

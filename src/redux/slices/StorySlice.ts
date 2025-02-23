@@ -12,7 +12,7 @@ export interface StoryType {
   title: string;
   type: "TEXT" | "FILE";
   author_id: string;
-  likes: number;
+  liked_by: string[];
   content?: string;
   file_link?: string;
   created_at?: string;
@@ -47,6 +47,10 @@ export const StorySlice = createSlice({
       state.storyData = state.storyList.find(
         ({ id }) => id == action.payload._id
       );
+    },
+
+    updateStoryData(state, action: PayloadAction<Partial<StoryType>>) {
+      state.storyData = { ...state.storyData, ...action.payload };
     },
 
     addDraftStory(state, action: PayloadAction<Partial<StoryType>>) {
@@ -89,6 +93,7 @@ export default StorySlice.reducer;
 export const {
   getStoryData,
   setStoryList,
+  updateStoryData,
   addDraftStory,
   removeDraftStory,
   updateDraftStory,
